@@ -3,6 +3,11 @@ import 'package:fitapp/services/auth_service.dart';
 import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/flutter_percent_indicator.dart';
+import 'package:fitapp/screens/workout_screen.dart';
+import 'package:fitapp/screens/nutrition_screen.dart';
+import 'package:fitapp/screens/add_meal_screen.dart';
+import 'package:fitapp/screens/progress_screen.dart';
+import 'package:fitapp/screens/bmi_calculator_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -100,16 +105,19 @@ Future<void> loadUser() async {
       Widget _actionButton(
         IconData icon,
         String text,
+        VoidCallback? onTap,
       ) {
-        return Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: 12,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F2FF),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Column(
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F2FF),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Column(
             children: [
               Icon(
                 icon,
@@ -123,6 +131,7 @@ Future<void> loadUser() async {
               ),
             ],
           ),
+        ),
         );
       }
       if (isLoading) {
@@ -136,11 +145,29 @@ Future<void> loadUser() async {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentIndex,
           onTap: (index){
-            setState(() {
-              currentIndex = index;
-            });
+            if (index == 1) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const WorkoutScreen()),
+              );
+            } else if (index == 2) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const NutritionScreen()),
+              );
+            } else if (index == 3) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const ProgressScreen()),
+              );
+            } else {
+              setState(() {
+                currentIndex = index;
+              });
+            }
           },
-          type: BottomNavigationBarType.shifting,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
           selectedItemColor: const Color(0xFF6233D7),
           unselectedItemColor: Colors.grey,
           items: const [
@@ -442,6 +469,12 @@ Future<void> loadUser() async {
                             child: _actionButton(
                               Icons.play_arrow,
                               "Start Workout",
+                              () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const WorkoutScreen()),
+                                );
+                              },
                             ),
                           ),
         
@@ -451,6 +484,12 @@ Future<void> loadUser() async {
                             child: _actionButton(
                               Icons.restaurant,
                               "Add Meal",
+                              () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const AddMealScreen()),
+                                );
+                              },
                             ),
                           ),
         
@@ -460,6 +499,12 @@ Future<void> loadUser() async {
                             child: _actionButton(
                               Icons.monitor_weight,
                               "Add Weight",
+                              () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const BmiCalculatorScreen()),
+                                );
+                              },
                             ),
                           ),
                         ],
