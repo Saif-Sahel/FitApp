@@ -1,4 +1,7 @@
 import 'package:fitapp/screens/home_screen.dart';
+import 'package:fitapp/services/auth_service.dart';
+import 'package:fitapp/services/calorie_service.dart';
+import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:fitapp/widgets/choice_clip.dart';
 import 'package:fitapp/widgets/info_field.dart';
 import 'package:flutter/material.dart';
@@ -279,35 +282,62 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    onPressed: () {
-                      if (!formKey.currentState!.validate()) {
-                        return;
-                      }
-                      if (selectedGender.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Please select your gender'),
-                          ),
-                        );
-                        return;
-                      }
+                    onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
 
-                      if (selectedGoal.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Please select your goal'),
-                          ),
-                        );
-                        return;
-                      }
+                        if (selectedGender.isEmpty || selectedGoal.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Select gender and goal')),
+                          );
+                          return;
+                        }
 
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => HomeScreen(),
-                        ),
-                      );
-                    },
+                        final user = AuthService().currentUser;
+
+                        if (user == null) return;
+
+                        final age = int.parse(ageController.text);
+                        final height = double.parse(heightController.text);
+                        final weight = double.parse(weightController.text);
+
+                        final bmr = CalorieService.calculateBMR(
+                          weight: weight,
+                          height: height,
+                          age: age,
+                          gender: selectedGender,
+                        );
+
+                        final caloriesGoal = CalorieService.calculateCaloriesGoal(
+                          bmr: bmr,
+                          goal: selectedGoal,
+                        );
+
+                        await FirestoreService().saveUserData(
+                          uid: user.uid,
+                          data: {
+                            'age': age,
+                            'height': height,
+                            'weight': weight,
+                            'gender': selectedGender,
+                            'goal': selectedGoal,
+
+                            'caloriesGoal': caloriesGoal,
+                            'caloriesConsumed': 0,
+
+                            'waterConsumed': 0,
+                            'waterGoal': 8,
+
+                            'username': user.email?.split('@')[0] ?? 'User',
+
+                            'weightHistory': [weight],
+                          },
+                        );
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                        );
+                      },
                     child: const Text(
                       'Continue',
                       style: TextStyle(
@@ -318,7 +348,6 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     ),
                   ),
                 ),
-
               ],
             ),
           ),

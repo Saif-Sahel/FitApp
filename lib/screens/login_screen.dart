@@ -1,5 +1,5 @@
-import 'package:fitapp/screens/home_screen.dart';
 import 'package:fitapp/screens/signup_screen.dart';
+import 'package:fitapp/screens/user_info_screen.dart';
 import 'package:fitapp/services/auth_service.dart';
 import 'package:fitapp/widgets/text_field.dart';
 import 'package:flutter/material.dart';
@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => HomeScreen(),
+                                  builder: (_) => UserInfoScreen(),
                                 ),
                               );
                             }

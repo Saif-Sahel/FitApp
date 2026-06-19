@@ -1,5 +1,6 @@
 import 'package:fitapp/screens/login_screen.dart';
 import 'package:fitapp/services/auth_service.dart';
+import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:fitapp/widgets/text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -166,24 +167,30 @@ class _SignupScreenState extends State<SignupScreen> {
                         onPressed: () async{
                            if(formKey.currentState!.validate()){
                             final result = await _authService.signUp(
-                              email: emailController.text.trim(), 
-                              password: passwordController.text.trim()
+                                email: emailController.text.trim(),
+                                password: passwordController.text.trim(),
                               );
 
-                              if(result == null){
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Email Successfully Registered'),
-                                  ),
+                              if (result != null) {
+                                final uid = result.user!.uid;
+
+                                await FirestoreService().saveUserData(
+                                  uid: uid,
+                                  data: {
+                                    'username': userNameController.text.trim(),
+                                    'email': emailController.text.trim(),
+                                  },
                                 );
-                              }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Account created successfully')),
+                                );
 
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) => LoginScreen(),
-                                  ),
+                                  MaterialPageRoute(builder: (_) => LoginScreen()),
                                 );
+                              }
                             }
                             else{
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -1,4 +1,8 @@
+import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:fitapp/services/auth_service.dart';
+import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/flutter_percent_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -8,14 +12,464 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  @override
+
+    int currentIndex = 0;
+    final user = AuthService().currentUser;
+    Map<String, dynamic>? userData;
+    bool isLoading = true;
+    double percent = 0;
+
+    double waterConsumed = 0;
+    double waterGoal = 1;
+    double waterPercent = 0;
+
+    String get username => userData?['username'] ?? 'User';
+    List<double> weightHistory = [];
+
+    
+  @override 
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+Future<void> loadUser() async {
+  final user = AuthService().currentUser;
+  if (user == null) return;
+
+  final doc = await FirestoreService().getUserData(user.uid);
+
+  if (!mounted) return;
+
+  final data = doc.data();
+
+  final consumed = (data?['caloriesConsumed'] ?? 0).toDouble();
+  final goal = (data?['caloriesGoal'] ?? 1).toDouble();
+
+  final waterConsumedVal =
+      (data?['waterConsumed'] ?? 0).toDouble();
+
+  final waterGoalVal =
+      (data?['waterGoal'] ?? 1).toDouble();
+
+      final weights = (data?['weightHistory'] ?? []) as List;
+
+    weightHistory = weights.map((e) => (e as num).toDouble()).toList();
+
+  setState(() {
+    userData = data;
+    isLoading = false;
+
+    percent = (consumed / goal).clamp(0.0, 1.0);
+    waterConsumed = waterConsumedVal;
+    waterGoal = waterGoalVal;
+    waterPercent =
+        (waterConsumedVal / waterGoalVal).clamp(0.0, 1.0);
+  });
+}
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
+
+    Widget _weightPoint(String value) {
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Text('Home Page')
+            Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: 14,
+              height: 14,
+              decoration: const BoxDecoration(
+                color: Color(0xFF6233D7),
+                shape: BoxShape.circle,
+              ),
+            ),
+            Container(
+              width: 2,
+              height: 40,
+              color: Colors.grey.shade300,
+            ),
           ],
+        );
+      }
+
+      Widget _actionButton(
+        IconData icon,
+        String text,
+      ) {
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 12,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F2FF),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: const Color(0xFF6233D7),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        );
+      }
+      if (isLoading) {
+      return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+          );
+        }
+    return Scaffold(
+       backgroundColor: const Color(0xFFF8F8F8),
+
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (index){
+            setState(() {
+              currentIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.shifting,
+          selectedItemColor: const Color(0xFF6233D7),
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: "Home",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fitness_center),
+              label: "Workouts",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.restaurant),
+              label: "Nutrition",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart),
+              label: "Progress",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: "Profile",
+            ),
+          ],
+        ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      EasyRichText(
+                        'Welcome Back, \n $username',
+                        defaultStyle: TextStyle(fontWeight: FontWeight.bold,fontSize: 24),
+                        patternList: [
+                          EasyRichTextPattern(
+                            targetString: username,
+                            style: TextStyle(fontSize: 30)
+                          )
+                        ],
+                        ),
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.grey.shade200,
+                        child: const Icon(
+                          Icons.person,
+                          size: 30,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height*.20,
+                  width: MediaQuery.of(context).size.width*.9,
+                  child: Card(
+                    color: Color(0xFF6233D7).withOpacity(.8),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 15.0,top: 10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Calories',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 24),),
+                          Row(
+                            children: [
+                              Text("${userData?['caloriesConsumed']?.toInt() ?? 0} / ${userData?['caloriesGoal']?.toInt() ?? 2000}",
+                              style: TextStyle(color: Colors.white,fontSize: 30,fontWeight: FontWeight.bold),),
+                              SizedBox(width: 20,),
+                              CircularPercentIndicator(
+                                radius: 40,
+                                lineWidth: 8,
+                                percent: percent,
+                                progressColor: Colors.white,
+                                backgroundColor: Colors.white38,
+                                center: Text('${(percent * 100).toInt()}%',style: TextStyle(fontSize: 24,fontWeight: FontWeight.bold,color: Colors.white),),                           
+                              )
+                            ],
+                          ),
+                          SizedBox(height: 10,),
+                          LinearPercentIndicator(
+                            lineHeight: 10,
+                            percent: percent,
+                            width: MediaQuery.of(context).size.width*.8,
+                            progressColor: Colors.white,
+                            backgroundColor: Colors.white38,
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(.15),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(15),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Water",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                Spacer(),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "${waterConsumed.toInt()} / ${waterGoal.toInt()}",
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Spacer(),
+                                    Icon(
+                                      Icons.water_drop,
+                                      color: Colors.lightBlue,
+                                      size: 35,
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  "Glasses",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                                LinearProgressIndicator(
+                                  value: waterPercent.clamp(0.0, 1.0),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(20),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+        
+                      const SizedBox(width: 15),
+        
+                      Expanded(
+                        child: Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(.15),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Workout",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                Spacer(),
+                                Icon(
+                                  Icons.fitness_center,
+                                  color: Color(0xFF6233D7),
+                                  size: 30,
+                                ),
+                                Text(
+                                  "Push Day",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                Text(
+                                  "Chest & Triceps",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+        
+                const SizedBox(height: 10),
+        
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(.15),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Weight Progress",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+        
+                        const SizedBox(height: 15),
+        
+                        Text(
+                          weightHistory.isNotEmpty
+                              ? weightHistory.last.toString()
+                              : '0',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30,
+                          ),
+                        ),
+        
+                        const Text(
+                          "Current Weight",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+        
+                        const SizedBox(height: 20),
+        
+                        SizedBox(
+                          height: 120,
+                          child: Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.end,
+                            children: [
+                              ...weightHistory.map((w) => _weightPoint(w.toString())).toList(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        
+                const SizedBox(height: 20),
+      
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Quick Actions",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+        
+                      const SizedBox(height: 15),
+        
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _actionButton(
+                              Icons.play_arrow,
+                              "Start Workout",
+                            ),
+                          ),
+        
+                          const SizedBox(width: 10),
+        
+                          Expanded(
+                            child: _actionButton(
+                              Icons.restaurant,
+                              "Add Meal",
+                            ),
+                          ),
+        
+                          const SizedBox(width: 10),
+        
+                          Expanded(
+                            child: _actionButton(
+                              Icons.monitor_weight,
+                              "Add Weight",
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

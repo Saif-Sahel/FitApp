@@ -1,5 +1,4 @@
 import 'package:fitapp/screens/splash_screen.dart';
-import 'package:fitapp/screens/user_info_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: UserInfoScreen(),
+      home: SplashScreen(),
     );
   }
 }
