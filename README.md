@@ -1,8 +1,9 @@
-# fitapp
+# Fit app
 
-A new Flutter project.
+## Can't go to the gym for doing exercises because of your time, the big distance or even bored of the routine?
+##No worries! Your problem is our solution
 
-## Getting Started
+### Getting Started
 
 This project is a starting point for a Flutter application.
 
