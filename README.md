@@ -1,7 +1,8 @@
 # Fit app
 
-## Can't go to the gym for doing exercises because of your time, the big distance or even bored of the routine?
-##No worries! Your problem is our solution
+## Can't go to the gym for doing exercises because of your time, the big distance or even bored of the routine? 
+## No worries! Your problem is our solution
+### Our team made a magic for helping you practise in anywhere at anytime with any tools to make improvements to your body by some exercises good for chest, legs, arms, ...etc.
 
 ### Getting Started
 
