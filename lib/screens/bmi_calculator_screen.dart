@@ -1,0 +1,314 @@
+import 'package:flutter/material.dart';
+import 'dart:math';
+
+class BmiCalculatorScreen extends StatefulWidget {
+  const BmiCalculatorScreen({super.key});
+
+  @override
+  State<BmiCalculatorScreen> createState() => _BmiCalculatorScreenState();
+}
+
+class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
+  double height = 180;
+  double weight = 75;
+  double bmiResult = 23.1; // Default matching the design
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateBmi();
+  }
+
+  void _calculateBmi() {
+    setState(() {
+      bmiResult = weight / pow(height / 100, 2);
+    });
+  }
+
+  String _getBmiStatus() {
+    if (bmiResult < 18.5) return "Underweight";
+    if (bmiResult >= 18.5 && bmiResult <= 24.9) return "Normal Weight";
+    if (bmiResult >= 25 && bmiResult <= 29.9) return "Overweight";
+    return "Obese";
+  }
+
+  Color _getBmiColor() {
+    if (bmiResult < 18.5) return Colors.blueGrey;
+    if (bmiResult >= 18.5 && bmiResult <= 24.9) return Colors.green;
+    if (bmiResult >= 25 && bmiResult <= 29.9) return Colors.orange;
+    return Colors.red;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9F9F9), // Slight grey background so white cards pop
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF9F9F9),
+        elevation: 0,
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+        ),
+        title: const Text(
+          "BMI Calculator",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: Column(
+              children: [
+                // Height Card
+                _buildCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Height",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "${height.toInt()} ",
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: "cm",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: const Color(0xFF6233D7),
+                          inactiveTrackColor: const Color(0xFFF0E5FF),
+                          thumbColor: const Color(0xFF6233D7),
+                          overlayColor: const Color(0xFF6233D7).withAlpha(30),
+                          trackHeight: 4,
+                          trackShape: const RoundedRectSliderTrackShape(),
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        ),
+                        child: Slider(
+                          value: height,
+                          min: 100,
+                          max: 250,
+                          onChanged: (value) {
+                            setState(() {
+                              height = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+
+                // Weight Card
+                _buildCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Weight",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "${weight.toInt()} ",
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: "kg",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      SliderTheme(
+                        data: SliderThemeData(
+                          activeTrackColor: const Color(0xFF6233D7),
+                          inactiveTrackColor: const Color(0xFFF0E5FF),
+                          thumbColor: const Color(0xFF6233D7),
+                          overlayColor: const Color(0xFF6233D7).withAlpha(30),
+                          trackHeight: 4,
+                          trackShape: const RoundedRectSliderTrackShape(),
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        ),
+                        child: Slider(
+                          value: weight,
+                          min: 30,
+                          max: 150,
+                          onChanged: (value) {
+                            setState(() {
+                              weight = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                // Calculate Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: _calculateBmi,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6233D7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "Calculate",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                // Result Card
+                _buildCard(
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Your BMI",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Text(
+                          bmiResult.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _getBmiStatus(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: _getBmiColor(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+
+                // Legend Card
+                _buildCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildLegendItem("< 18.5", "Underweight", bmiResult < 18.5 ? Colors.blueGrey : Colors.grey),
+                      _buildLegendItem("18.5 - 24.9", "Normal", bmiResult >= 18.5 && bmiResult <= 24.9 ? Colors.green : Colors.grey),
+                      _buildLegendItem("25 - 29.9", "Overweight", bmiResult >= 25 && bmiResult <= 29.9 ? Colors.orange : Colors.grey),
+                      _buildLegendItem("30+", "Obese", bmiResult >= 30 ? Colors.red : Colors.grey),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard({required Widget child, EdgeInsetsGeometry? padding}) {
+    return Container(
+      width: double.infinity,
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildLegendItem(String range, String label, Color color) {
+    return Column(
+      children: [
+        Text(
+          range,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+}
