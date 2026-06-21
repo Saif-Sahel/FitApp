@@ -1,8 +1,7 @@
 import 'package:fitapp/screens/WorkoutScreen/workout_screen.dart';
 import 'package:fitapp/screens/home_screen.dart';
-import 'package:fitapp/screens/nutrition_screen.dart';
+import 'package:fitapp/screens/Nutrition_Screen/nutrition_screen.dart';
 import 'package:fitapp/screens/profile_screen.dart';
-import 'package:fitapp/screens/progress_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainScreen extends StatefulWidget {
@@ -19,7 +18,6 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     WorkoutScreen(),
     NutritionScreen(),
-    ProgressScreen(),
     ProfileScreen(),
   ];
 
@@ -44,7 +42,6 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: "Workouts"),
           BottomNavigationBarItem(icon: Icon(Icons.restaurant), label: "Nutrition"),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Progress"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),

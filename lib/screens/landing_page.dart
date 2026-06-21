@@ -59,7 +59,7 @@ class _LandingPageState extends State<LandingPage> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Text(
-                      "SPORTUP",
+                      "GYMMATE",
                       style: TextStyle(
                         color: Color(0xFF6C63FF),
                         fontWeight: FontWeight.bold,

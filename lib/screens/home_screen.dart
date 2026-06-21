@@ -1,4 +1,7 @@
 import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:fitapp/screens/Nutrition_Screen/nutrition_screen.dart';
+import 'package:fitapp/screens/WorkoutScreen/workout_screen.dart';
+import 'package:fitapp/screens/bmi_calculator_screen.dart';
 import 'package:fitapp/services/auth_service.dart';
 import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:flutter/material.dart';
@@ -27,44 +30,47 @@ class _HomeScreenState extends State<HomeScreen> {
     List<double> weightHistory = [];
 
     
-  @override 
-  void initState() {
-    super.initState();
-    loadUser();
-  }
+@override
+void initState() {
+  super.initState();
+  loadUser();
+}
 
-Future<void> loadUser() async {
-  final user = AuthService().currentUser;
-  if (user == null) return;
+void loadUser() {
+  final uid = user!.uid;
 
-  final doc = await FirestoreService().getUserData(user.uid);
+  FirestoreService()
+      .getUserStream(uid)
+      .listen((doc) {
+    final data = doc.data();
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  final data = doc.data();
+    final consumed = (data?['caloriesConsumed'] ?? 0).toDouble();
+    final goal = (data?['caloriesGoal'] ?? 2000).toDouble();
 
-  final consumed = (data?['caloriesConsumed'] ?? 0).toDouble();
-  final goal = (data?['caloriesGoal'] ?? 1).toDouble();
+    final waterConsumedVal =
+        (data?['waterConsumed'] ?? 0).toDouble();
 
-  final waterConsumedVal =
-      (data?['waterConsumed'] ?? 0).toDouble();
+    final waterGoalVal =
+        (data?['waterGoal'] ?? 1).toDouble();
 
-  final waterGoalVal =
-      (data?['waterGoal'] ?? 1).toDouble();
+    final weights = (data?['weightHistory'] ?? []) as List;
 
-      final weights = (data?['weightHistory'] ?? []) as List;
+    setState(() {
+      userData = data;
+      isLoading = false;
 
-    weightHistory = weights.map((e) => (e as num).toDouble()).toList();
+      percent = (consumed / goal).clamp(0.0, 1.0);
 
-  setState(() {
-    userData = data;
-    isLoading = false;
+      waterConsumed = waterConsumedVal;
+      waterGoal = waterGoalVal;
+      waterPercent =
+          (waterConsumedVal / waterGoalVal).clamp(0.0, 1.0);
 
-    percent = (consumed / goal).clamp(0.0, 1.0);
-    waterConsumed = waterConsumedVal;
-    waterGoal = waterGoalVal;
-    waterPercent =
-        (waterConsumedVal / waterGoalVal).clamp(0.0, 1.0);
+      weightHistory =
+          weights.map((e) => (e as num).toDouble()).toList();
+    });
   });
 }
   Widget build(BuildContext context) {
@@ -180,7 +186,7 @@ Future<void> loadUser() async {
                             children: [
                               Text("${userData?['caloriesConsumed']?.toInt() ?? 0} / ${userData?['caloriesGoal']?.toInt() ?? 2000}",
                               style: TextStyle(color: Colors.white,fontSize: 30,fontWeight: FontWeight.bold),),
-                              SizedBox(width: 120,),
+                              SizedBox(width: 100,),
                               CircularPercentIndicator(
                                 radius: 40,
                                 lineWidth: 8,
@@ -353,7 +359,7 @@ Future<void> loadUser() async {
         
                         Text(
                           weightHistory.isNotEmpty
-                              ? weightHistory.last.toString()
+                              ? weightHistory.last.toStringAsFixed(0)
                               : '0',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
@@ -376,7 +382,7 @@ Future<void> loadUser() async {
                             crossAxisAlignment:
                                 CrossAxisAlignment.end,
                             children: [
-                              ...weightHistory.map((w) => _weightPoint(w.toString())).toList(),
+                              ...weightHistory.map((w) => _weightPoint(w.toInt().toString())).toList(),
                             ],
                           ),
                         ),
@@ -405,27 +411,36 @@ Future<void> loadUser() async {
                       Row(
                         children: [
                           Expanded(
-                            child: _actionButton(
-                              Icons.play_arrow,
-                              "Start Workout",
+                            child: InkWell(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WorkoutScreen())),
+                              child: _actionButton(
+                                Icons.play_arrow,
+                                "Start Workout",
+                              ),
                             ),
                           ),
         
                           const SizedBox(width: 10),
         
                           Expanded(
-                            child: _actionButton(
-                              Icons.restaurant,
-                              "Add Meal",
+                            child: InkWell(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NutritionScreen())),
+                              child: _actionButton(
+                                Icons.restaurant,
+                                "Add Meal",
+                              ),
                             ),
                           ),
         
                           const SizedBox(width: 10),
         
                           Expanded(
-                            child: _actionButton(
-                              Icons.monitor_weight,
-                              "Add Weight",
+                            child: InkWell(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BmiCalculatorScreen())),
+                              child: _actionButton(
+                                Icons.monitor_weight,
+                                "Add New Weight And Calculate BMI",
+                              ),
                             ),
                           ),
                         ],
