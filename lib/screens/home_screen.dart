@@ -186,7 +186,7 @@ void loadUser() {
                             children: [
                               Text("${userData?['caloriesConsumed']?.toInt() ?? 0} / ${userData?['caloriesGoal']?.toInt() ?? 2000}",
                               style: TextStyle(color: Colors.white,fontSize: 30,fontWeight: FontWeight.bold),),
-                              SizedBox(width: 100,),
+                              SizedBox(width: 80,),
                               CircularPercentIndicator(
                                 radius: 40,
                                 lineWidth: 8,
