@@ -1,6 +1,6 @@
-# Project name: Fit app
-# Project idea: Practising in anytime at anywhere.
-# Objective: Any user can get benefit with his time for body improvement. Also this project can be a strong substitute for gym to save some money. Moreover, instead of wasting much time on unuseful stuffs, this app can encourage him to enhance his health.
+ Project name: Fit app
+ Project idea: Practising in anytime at anywhere.
+Objective: Any user can get benefit with his time for body improvement. Also this project can be a strong substitute for gym to save some money. Moreover, instead of wasting much time on unuseful stuffs, this app can encourage him to enhance his health.
 
 ## Can't go to the gym because of a busy schedule, long distances, or lack of motivation?
 ## No worries! We've got you covered.
