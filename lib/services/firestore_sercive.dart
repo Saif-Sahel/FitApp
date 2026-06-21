@@ -23,4 +23,14 @@ class FirestoreService {
         .doc(uid)
         .get();
   }
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>>
+    userStream(String uid) {
+  return _firestore
+      .collection('users')
+      .doc(uid)
+      .snapshots();
+}
+  
+  
 }

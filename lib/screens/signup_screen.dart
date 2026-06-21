@@ -1,4 +1,7 @@
+import 'package:fitapp/screens/home_screen.dart';
 import 'package:fitapp/screens/login_screen.dart';
+import 'package:fitapp/screens/main_screen.dart';
+import 'package:fitapp/screens/user_info_screen.dart';
 import 'package:fitapp/services/auth_service.dart';
 import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:fitapp/widgets/text_field.dart';
@@ -164,39 +167,48 @@ class _SignupScreenState extends State<SignupScreen> {
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        onPressed: () async{
-                           if(formKey.currentState!.validate()){
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+
                             final result = await _authService.signUp(
-                                email: emailController.text.trim(),
-                                password: passwordController.text.trim(),
+                              email: emailController.text.trim(),
+                              password: passwordController.text.trim(),
+                            );
+
+                            if (result != null) {
+                              final user = _authService.currentUser;
+                              if (user == null) return;
+
+                              final uid = user.uid;
+
+                              await FirestoreService().saveUserData(
+                                uid: uid,
+                                data: {
+                                  'username': userNameController.text.trim(),
+                                  'email': emailController.text.trim(),
+                                  'profileCompleted': false,
+                                },
                               );
 
-                              if (result != null) {
-                                final uid = result.user!.uid;
-
-                                await FirestoreService().saveUserData(
-                                  uid: uid,
-                                  data: {
-                                    'username': userNameController.text.trim(),
-                                    'email': emailController.text.trim(),
-                                  },
-                                );
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Account created successfully')),
-                                );
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => LoginScreen()),
-                                );
-                              }
-                            }
-                            else{
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Please fill all fields correctly'))
+                                const SnackBar(content: Text('Account created successfully')),
+                              );
+
+                              if (!mounted) return;                            
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const UserInfoScreen(),
+                                ),
+                              );
+
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Signup failed')),
                               );
                             }
+                          }
                         },
                         child: Text(
                           'Sign Up',
@@ -235,14 +247,14 @@ class _SignupScreenState extends State<SignupScreen> {
                                 children: [
             
                                   Icon(
-                                    Icons.apple,
+                                    Icons.facebook,
                                     size: 24,
                                   ),
             
                                   SizedBox(width: 10),
             
                                   Text(
-                                    'Apple',
+                                    'Facebook',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 16,
@@ -268,7 +280,54 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(18),
-                              onTap: () {},
+                              onTap: () async{
+                                final userCredential =
+                                    await _authService.signInWithGoogle();
+
+                                if (userCredential != null) {
+                                  final uid = userCredential.user!.uid;
+
+                                  final doc =
+                                      await FirestoreService().getUserData(uid);
+
+                                  if (!doc.exists) {
+                                    await FirestoreService().saveUserData(
+                                      uid: uid,
+                                      data: {
+                                        'username': userCredential.user!.displayName ?? '',
+                                        'email': userCredential.user!.email ?? '',
+                                        'profileCompleted': false,
+                                      },
+                                    );
+
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const UserInfoScreen(),
+                                      ),
+                                    );
+
+                                  } else {
+                                    final data = doc.data();
+
+                                    if (data?['profileCompleted'] == true) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const MainScreen(),
+                                        ),
+                                      );
+                                    } else {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const UserInfoScreen(),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                }
+                              },
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

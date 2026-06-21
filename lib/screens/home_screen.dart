@@ -126,47 +126,13 @@ Future<void> loadUser() async {
         );
       }
       if (isLoading) {
-      return const Scaffold(
+      return Scaffold(
           body: Center(child: CircularProgressIndicator()),
           );
         }
-    return Scaffold(
-       backgroundColor: const Color(0xFFF8F8F8),
-
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (index){
-            setState(() {
-              currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.shifting,
-          selectedItemColor: const Color(0xFF6233D7),
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.fitness_center),
-              label: "Workouts",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant),
-              label: "Nutrition",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart),
-              label: "Progress",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: "Profile",
-            ),
-          ],
-        ),
-      body: SingleChildScrollView(
+    return 
+       
+      SingleChildScrollView(
         child: Center(
           child: SafeArea(
             child: Column(
@@ -214,7 +180,7 @@ Future<void> loadUser() async {
                             children: [
                               Text("${userData?['caloriesConsumed']?.toInt() ?? 0} / ${userData?['caloriesGoal']?.toInt() ?? 2000}",
                               style: TextStyle(color: Colors.white,fontSize: 30,fontWeight: FontWeight.bold),),
-                              SizedBox(width: 20,),
+                              SizedBox(width: 120,),
                               CircularPercentIndicator(
                                 radius: 40,
                                 lineWidth: 8,
@@ -471,7 +437,6 @@ Future<void> loadUser() async {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

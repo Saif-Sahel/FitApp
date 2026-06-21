@@ -1,5 +1,5 @@
-import 'package:fitapp/screens/home_screen.dart';
-import 'package:fitapp/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fitapp/screens/main_screen.dart';
 import 'package:fitapp/services/calorie_service.dart';
 import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:fitapp/widgets/choice_clip.dart';
@@ -292,7 +292,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                           return;
                         }
 
-                        final user = AuthService().currentUser;
+                        final user = FirebaseAuth.instance.currentUser;
 
                         if (user == null) return;
 
@@ -320,6 +320,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                             'weight': weight,
                             'gender': selectedGender,
                             'goal': selectedGoal,
+                            'profileCompleted': true,
 
                             'caloriesGoal': caloriesGoal,
                             'caloriesConsumed': 0,
@@ -335,7 +336,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => const HomeScreen()),
+                          MaterialPageRoute(builder: (_) => const MainScreen()),
                         );
                       },
                     child: const Text(
