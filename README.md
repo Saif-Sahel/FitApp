@@ -5,23 +5,9 @@
 ### Fit App helps you stay active anytime and anywhere. It provides a variety of exercises targeting different muscle groups, including the chest, arms, legs, and more.
 Whether you're at home, at work, or traveling, Fit App makes it easier to maintain a healthy lifestyle and achieve your fitness goals.
 ### Features:
-Workout plans for different body parts
-Easy-to-follow exercises
-Anytime, anywhere access
-Progress tracking
-User-friendly interface
-Getting Started
-This project is developed using Flutter and aims to help users improve their fitness and overall health through simple and effective workouts.
-### Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+#### 1.Workout plans for different body parts
+#### 2.Easy-to-follow exercises
+#### 3.Anytime, anywhere access
+#### 4.Progress tracking
+#### 5.User-friendly interface.
+### Getting Started: This project is developed using Flutter and aims to help users improve their fitness and overall health through simple and effective workouts.
