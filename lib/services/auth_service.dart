@@ -5,29 +5,25 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<UserCredential?> signUp({
-  required String email,
-  required String password,
-}) async {
-  try {
-    return await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-  } catch (e) {
-    return null;
+    required String email,
+    required String password,
+  }) async {
+    try {
+      return await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      return null;
+    }
   }
-}
 
   Future<String?> signIn({
     required String email,
     required String password,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -39,32 +35,32 @@ class AuthService {
   }
 
   User? get currentUser => _auth.currentUser;
-  
-//   final GoogleSignIn _googleSignIn = GoogleSignIn(
-//   scopes: ['email'],
-// );
 
-// Future<UserCredential?> signInWithGoogle() async {
-//   try {
-//     final GoogleSignInAccount? googleUser =
-//         await _googleSignIn.signIn();
+  //   final GoogleSignIn _googleSignIn = GoogleSignIn(
+  //   scopes: ['email'],
+  // );
 
-//     if (googleUser == null) return null;
+  // Future<UserCredential?> signInWithGoogle() async {
+  //   try {
+  //     final GoogleSignInAccount? googleUser =
+  //         await _googleSignIn.signIn();
 
-//     final GoogleSignInAuthentication googleAuth =
-//         await googleUser.authentication;
+  //     if (googleUser == null) return null;
 
-//     final credential = GoogleAuthProvider.credential(
-//       accessToken: googleAuth.accessToken,
-//       idToken: googleAuth.idToken,
-//     );
+  //     final GoogleSignInAuthentication googleAuth =
+  //         await googleUser.authentication;
 
-//     return await FirebaseAuth.instance
-//         .signInWithCredential(credential);
+  //     final credential = GoogleAuthProvider.credential(
+  //       accessToken: googleAuth.accessToken,
+  //       idToken: googleAuth.idToken,
+  //     );
 
-//   } catch (e) {
-//     print("Google Sign-In Error: $e");
-//     return null;
-//   }
-// }
+  //     return await FirebaseAuth.instance
+  //         .signInWithCredential(credential);
+
+  //   } catch (e) {
+  //     print("Google Sign-In Error: $e");
+  //     return null;
+  //   }
+  // }
 }

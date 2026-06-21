@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:fitapp/services/firestore_sercive.dart';
+import 'package:fitapp/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BmiCalculatorScreen extends StatefulWidget {
   const BmiCalculatorScreen({super.key});
@@ -19,10 +22,28 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
     _calculateBmi();
   }
 
-  void _calculateBmi() {
+  void _calculateBmi() async {
     setState(() {
       bmiResult = weight / pow(height / 100, 2);
     });
+
+    // Save to Firestore
+    final user = AuthService().currentUser;
+    if (user != null) {
+      await FirestoreService().saveUserData(
+        uid: user.uid,
+        data: {
+          'weight': weight.toInt(),
+          'height': height.toInt(),
+          'weightHistory': FieldValue.arrayUnion([weight.toDouble()]),
+        },
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Data saved successfully!")),
+        );
+      }
+    }
   }
 
   String _getBmiStatus() {
@@ -42,13 +63,19 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Slight grey background so white cards pop
+      backgroundColor: const Color(
+        0xFFF9F9F9,
+      ), // Slight grey background so white cards pop
       appBar: AppBar(
         backgroundColor: const Color(0xFFF9F9F9),
         elevation: 0,
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
+          child: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.black,
+            size: 20,
+          ),
         ),
         title: const Text(
           "BMI Calculator",
@@ -63,7 +90,10 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 10.0,
+            ),
             child: Column(
               children: [
                 // Height Card
@@ -111,7 +141,9 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
                           overlayColor: const Color(0xFF6233D7).withAlpha(30),
                           trackHeight: 4,
                           trackShape: const RoundedRectSliderTrackShape(),
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 8,
+                          ),
                         ),
                         child: Slider(
                           value: height,
@@ -174,7 +206,9 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
                           overlayColor: const Color(0xFF6233D7).withAlpha(30),
                           trackHeight: 4,
                           trackShape: const RoundedRectSliderTrackShape(),
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 8,
+                          ),
                         ),
                         child: Slider(
                           value: weight,
@@ -206,7 +240,7 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
                       elevation: 0,
                     ),
                     child: const Text(
-                      "Calculate",
+                      "Calculate & Save",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -256,14 +290,37 @@ class _BmiCalculatorScreenState extends State<BmiCalculatorScreen> {
 
                 // Legend Card
                 _buildCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 20,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildLegendItem("< 18.5", "Underweight", bmiResult < 18.5 ? Colors.blueGrey : Colors.grey),
-                      _buildLegendItem("18.5 - 24.9", "Normal", bmiResult >= 18.5 && bmiResult <= 24.9 ? Colors.green : Colors.grey),
-                      _buildLegendItem("25 - 29.9", "Overweight", bmiResult >= 25 && bmiResult <= 29.9 ? Colors.orange : Colors.grey),
-                      _buildLegendItem("30+", "Obese", bmiResult >= 30 ? Colors.red : Colors.grey),
+                      _buildLegendItem(
+                        "< 18.5",
+                        "Underweight",
+                        bmiResult < 18.5 ? Colors.blueGrey : Colors.grey,
+                      ),
+                      _buildLegendItem(
+                        "18.5 - 24.9",
+                        "Normal",
+                        bmiResult >= 18.5 && bmiResult <= 24.9
+                            ? Colors.green
+                            : Colors.grey,
+                      ),
+                      _buildLegendItem(
+                        "25 - 29.9",
+                        "Overweight",
+                        bmiResult >= 25 && bmiResult <= 29.9
+                            ? Colors.orange
+                            : Colors.grey,
+                      ),
+                      _buildLegendItem(
+                        "30+",
+                        "Obese",
+                        bmiResult >= 30 ? Colors.red : Colors.grey,
+                      ),
                     ],
                   ),
                 ),

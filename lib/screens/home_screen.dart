@@ -1,13 +1,14 @@
-import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:fitapp/screens/profile_screen.dart';
 import 'package:fitapp/services/auth_service.dart';
 import 'package:fitapp/services/firestore_sercive.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/flutter_percent_indicator.dart';
 import 'package:fitapp/screens/workout_screen.dart';
 import 'package:fitapp/screens/nutrition_screen.dart';
-import 'package:fitapp/screens/add_meal_screen.dart';
 import 'package:fitapp/screens/progress_screen.dart';
 import 'package:fitapp/screens/bmi_calculator_screen.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,504 +18,562 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-    int currentIndex = 0;
-    final user = AuthService().currentUser;
-    Map<String, dynamic>? userData;
-    bool isLoading = true;
-    double percent = 0;
-
-    double waterConsumed = 0;
-    double waterGoal = 1;
-    double waterPercent = 0;
-
-    String get username => userData?['username'] ?? 'User';
-    List<double> weightHistory = [];
-
-    
-  @override 
-  void initState() {
-    super.initState();
-    loadUser();
-  }
-
-Future<void> loadUser() async {
+  int currentIndex = 0;
   final user = AuthService().currentUser;
-  if (user == null) return;
 
-  final doc = await FirestoreService().getUserData(user.uid);
-
-  if (!mounted) return;
-
-  final data = doc.data();
-
-  final consumed = (data?['caloriesConsumed'] ?? 0).toDouble();
-  final goal = (data?['caloriesGoal'] ?? 1).toDouble();
-
-  final waterConsumedVal =
-      (data?['waterConsumed'] ?? 0).toDouble();
-
-  final waterGoalVal =
-      (data?['waterGoal'] ?? 1).toDouble();
-
-      final weights = (data?['weightHistory'] ?? []) as List;
-
-    weightHistory = weights.map((e) => (e as num).toDouble()).toList();
-
-  setState(() {
-    userData = data;
-    isLoading = false;
-
-    percent = (consumed / goal).clamp(0.0, 1.0);
-    waterConsumed = waterConsumedVal;
-    waterGoal = waterGoalVal;
-    waterPercent =
-        (waterConsumedVal / waterGoalVal).clamp(0.0, 1.0);
-  });
-}
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = const Color(0xFF6233D7);
 
-    Widget _weightPoint(String value) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: 14,
-              height: 14,
-              decoration: const BoxDecoration(
-                color: Color(0xFF6233D7),
-                shape: BoxShape.circle,
-              ),
-            ),
-            Container(
-              width: 2,
-              height: 40,
-              color: Colors.grey.shade300,
-            ),
-          ],
-        );
-      }
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('User not logged in')));
+    }
 
-      Widget _actionButton(
-        IconData icon,
-        String text,
-        VoidCallback? onTap,
-      ) {
-        return GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              vertical: 12,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F2FF),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Column(
-            children: [
-              Icon(
-                icon,
-                color: const Color(0xFF6233D7),
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirestoreService().getUserStream(user!.uid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final userData = snapshot.data?.data();
+        final username = userData?['username'] ?? 'User';
+        final consumed = (userData?['caloriesConsumed'] ?? 0).toDouble();
+        final goal = (userData?['caloriesGoal'] ?? 2200).toDouble();
+        final percent = (consumed / goal).clamp(0.0, 1.0);
+        final waterConsumed = (userData?['waterConsumed'] ?? 0).toDouble();
+        final waterGoal = (userData?['waterGoal'] ?? 8).toDouble();
+        final waterPercent = (waterConsumed / waterGoal).clamp(0.0, 1.0);
+        final weights = (userData?['weightHistory'] ?? []) as List;
+        final weightHistory = weights.isNotEmpty
+            ? weights.map((e) => (e as num).toDouble()).toList()
+            : [80.0, 78.5, 79.0, 78.0]; // Fallback design data
+
+        return Scaffold(
+          backgroundColor: isDark
+              ? const Color(0xFF121212)
+              : const Color(0xFFF8F8F8),
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: currentIndex,
+            onTap: (index) {
+              if (index == 1) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WorkoutScreen(),
+                  ),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NutritionScreen(),
+                  ),
+                );
+              } else if (index == 3) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProgressScreen(),
+                  ),
+                );
+              } else if (index == 4) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              } else {
+                setState(() {
+                  currentIndex = index;
+                });
+              }
+            },
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            selectedItemColor: primaryColor,
+            unselectedItemColor: Colors.grey,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.fitness_center),
+                label: "Workouts",
               ),
-              const SizedBox(height: 5),
-              Text(
-                text,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.restaurant),
+                label: "Nutrition",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.bar_chart),
+                label: "Progress",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: "Profile",
               ),
             ],
           ),
-        ),
-        );
-      }
-      if (isLoading) {
-      return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-          );
-        }
-    return Scaffold(
-       backgroundColor: const Color(0xFFF8F8F8),
-
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (index){
-            if (index == 1) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const WorkoutScreen()),
-              );
-            } else if (index == 2) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const NutritionScreen()),
-              );
-            } else if (index == 3) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const ProgressScreen()),
-              );
-            } else {
-              setState(() {
-                currentIndex = index;
-              });
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF6233D7),
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.fitness_center),
-              label: "Workouts",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant),
-              label: "Nutrition",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart),
-              label: "Progress",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: "Profile",
-            ),
-          ],
-        ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      EasyRichText(
-                        'Welcome Back, \n $username',
-                        defaultStyle: TextStyle(fontWeight: FontWeight.bold,fontSize: 24),
-                        patternList: [
-                          EasyRichTextPattern(
-                            targetString: username,
-                            style: TextStyle(fontSize: 30)
-                          )
-                        ],
-                        ),
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.grey.shade200,
-                        child: const Icon(
-                          Icons.person,
-                          size: 30,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height*.20,
-                  width: MediaQuery.of(context).size.width*.9,
-                  child: Card(
-                    color: Color(0xFF6233D7).withOpacity(.8),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 15.0,top: 10),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Calories',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white,fontSize: 24),),
-                          Row(
-                            children: [
-                              Text("${userData?['caloriesConsumed']?.toInt() ?? 0} / ${userData?['caloriesGoal']?.toInt() ?? 2000}",
-                              style: TextStyle(color: Colors.white,fontSize: 30,fontWeight: FontWeight.bold),),
-                              SizedBox(width: 20,),
-                              CircularPercentIndicator(
-                                radius: 40,
-                                lineWidth: 8,
-                                percent: percent,
-                                progressColor: Colors.white,
-                                backgroundColor: Colors.white38,
-                                center: Text('${(percent * 100).toInt()}%',style: TextStyle(fontSize: 24,fontWeight: FontWeight.bold,color: Colors.white),),                           
-                              )
-                            ],
-                          ),
-                          SizedBox(height: 10,),
-                          LinearPercentIndicator(
-                            lineHeight: 10,
-                            percent: percent,
-                            width: MediaQuery.of(context).size.width*.8,
-                            progressColor: Colors.white,
-                            backgroundColor: Colors.white38,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(.15),
-                                blurRadius: 10,
+          body: SingleChildScrollView(
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    // Greeting Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Good Evening,',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
                               ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            ),
+                            Row(
                               children: [
                                 Text(
-                                  "Water",
+                                  username,
                                   style: TextStyle(
+                                    fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                    color: isDark ? Colors.white : Colors.black,
                                   ),
                                 ),
-                                Spacer(),
-                                Row(
+                                const SizedBox(width: 5),
+                                const Text(
+                                  '👋',
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Stack(
+                              children: [
+                                Icon(
+                                  Icons.notifications_none,
+                                  size: 28,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                                Positioned(
+                                  right: 5,
+                                  top: 5,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 15),
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: isDark
+                                  ? Colors.white10
+                                  : Colors.grey.shade200,
+                              child: Icon(
+                                Icons.person,
+                                size: 20,
+                                color: isDark ? Colors.white70 : Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Calories Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Calories',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              RichText(
+                                text: TextSpan(
                                   children: [
-                                    Text(
-                                      "${waterConsumed.toInt()} / ${waterGoal.toInt()}",
-                                      style: TextStyle(
-                                        fontSize: 28,
+                                    TextSpan(
+                                      text: "${consumed.toInt()}",
+                                      style: const TextStyle(
+                                        fontSize: 32,
                                         fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
                                     ),
-                                    Spacer(),
-                                    Icon(
-                                      Icons.water_drop,
-                                      color: Colors.lightBlue,
-                                      size: 35,
+                                    TextSpan(
+                                      text: " / ${goal.toInt()} kcal",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white70,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                Text(
-                                  "Glasses",
-                                  style: TextStyle(color: Colors.grey),
+                              ),
+                              const SizedBox(height: 15),
+                              Container(
+                                height: 6,
+                                width: 150,
+                                decoration: BoxDecoration(
+                                  color: Colors.white24,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                LinearProgressIndicator(
-                                  value: waterPercent.clamp(0.0, 1.0),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(20),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: percent,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-        
-                      const SizedBox(width: 15),
-        
-                      Expanded(
-                        child: Container(
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(.15),
-                                blurRadius: 10,
                               ),
                             ],
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Workout",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                Spacer(),
-                                Icon(
-                                  Icons.fitness_center,
-                                  color: Color(0xFF6233D7),
-                                  size: 30,
-                                ),
-                                Text(
-                                  "Push Day",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                Text(
-                                  "Chest & Triceps",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        
-                const SizedBox(height: 10),
-        
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(.15),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Weight Progress",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-        
-                        const SizedBox(height: 15),
-        
-                        Text(
-                          weightHistory.isNotEmpty
-                              ? weightHistory.last.toString()
-                              : '0',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 30,
-                          ),
-                        ),
-        
-                        const Text(
-                          "Current Weight",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-        
-                        const SizedBox(height: 20),
-        
-                        SizedBox(
-                          height: 120,
-                          child: Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceEvenly,
-                            crossAxisAlignment:
-                                CrossAxisAlignment.end,
-                            children: [
-                              ...weightHistory.map((w) => _weightPoint(w.toString())).toList(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-        
-                const SizedBox(height: 20),
-      
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Quick Actions",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-        
-                      const SizedBox(height: 15),
-        
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _actionButton(
-                              Icons.play_arrow,
-                              "Start Workout",
-                              () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const WorkoutScreen()),
-                                );
-                              },
-                            ),
-                          ),
-        
-                          const SizedBox(width: 10),
-        
-                          Expanded(
-                            child: _actionButton(
-                              Icons.restaurant,
-                              "Add Meal",
-                              () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const AddMealScreen()),
-                                );
-                              },
-                            ),
-                          ),
-        
-                          const SizedBox(width: 10),
-        
-                          Expanded(
-                            child: _actionButton(
-                              Icons.monitor_weight,
-                              "Add Weight",
-                              () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const BmiCalculatorScreen()),
-                                );
-                              },
+                          CircularPercentIndicator(
+                            radius: 45,
+                            lineWidth: 10,
+                            percent: percent,
+                            progressColor: Colors.white,
+                            backgroundColor: Colors.white24,
+                            circularStrokeCap: CircularStrokeCap.round,
+                            center: Text(
+                              '${(percent * 100).toInt()}%',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Water & Workout Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSmallCard(
+                            'Water',
+                            '${waterConsumed.toInt()} / ${waterGoal.toInt()}\nglasses',
+                            Icons.water_drop,
+                            Colors.lightBlue,
+                            waterPercent,
+                            isDark,
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(child: _buildWorkoutCard(isDark)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Weight Progress Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Weight Progress',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Icon(Icons.close, size: 20, color: Colors.grey),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '${weightHistory.last} kg',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Text(
+                            'Current Weight',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 120,
+                            child: LineChart(
+                              LineChartData(
+                                gridData: const FlGridData(show: false),
+                                titlesData: FlTitlesData(
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      getTitlesWidget: (value, meta) {
+                                        const days = [
+                                          '10 Jun',
+                                          '17 Jun',
+                                          '24 Jun',
+                                          '1 Jul',
+                                        ];
+                                        if (value.toInt() < days.length) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 8.0,
+                                            ),
+                                            child: Text(
+                                              days[value.toInt()],
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        return const SizedBox();
+                                      },
+                                    ),
+                                  ),
+                                  leftTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  topTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  rightTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                ),
+                                borderData: FlBorderData(show: false),
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: weightHistory
+                                        .asMap()
+                                        .entries
+                                        .map(
+                                          (e) =>
+                                              FlSpot(e.key.toDouble(), e.value),
+                                        )
+                                        .toList(),
+                                    isCurved: true,
+                                    color: primaryColor,
+                                    barWidth: 4,
+                                    dotData: const FlDotData(show: true),
+                                    belowBarData: BarAreaData(
+                                      show: true,
+                                      color: primaryColor.withOpacity(0.1),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Quick Actions
+                    const Text(
+                      'Quick Actions',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildActionButton(
+                          Icons.directions_run,
+                          'Steps',
+                          primaryColor,
+                          isDark,
+                        ),
+                        _buildActionButton(
+                          Icons.restaurant,
+                          'Add Meal',
+                          Colors.green,
+                          isDark,
+                        ),
+                        _buildActionButton(
+                          Icons.monitor_weight_outlined,
+                          'Add Weight',
+                          Colors.orange,
+                          isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const BmiCalculatorScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSmallCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    Color iconColor,
+    double progress,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Icon(icon, color: iconColor, size: 28),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: isDark ? Colors.white10 : Colors.grey.shade200,
+            color: iconColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkoutCard(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Workout',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const Icon(
+                Icons.fitness_center,
+                color: Color(0xFF6233D7),
+                size: 28,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Push Day',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const Text(
+            'Chest & Triceps',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          const SizedBox(height: 15),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    Color color,
+    bool isDark, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );
