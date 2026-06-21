@@ -15,3 +15,8 @@ Whether you're at home, at work, or traveling, Fit App makes it easier to mainta
 ### Getting Started: This project is developed using Flutter and aims to help users improve their fitness and overall health through simple and effective workouts.
 
 ### Our team:-
+### Saif Sahel
+### Abdelrahman Essam
+### Ali Tamer
+### Omar Mohamed
+### Habiba Shepl
