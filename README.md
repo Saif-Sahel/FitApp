@@ -20,3 +20,5 @@ Whether you're at home, at work, or traveling, Fit App makes it easier to mainta
 ### Ali Tamer
 ### Omar Mohamed
 ### Habiba Shepl
+
+How to use the app: https://drive.google.com/file/d/1O9L23l6jJ1V2F8XUNYRJZLVWdSEo6QiO/view?usp=drive_link
